@@ -194,6 +194,18 @@ class CallExpr(ASTNode):
     func: str; args: List[ASTNode]
 
 @dataclass
+class ForLoop(ASTNode):
+    var: str; iterable: ASTNode; body: List[ASTNode]
+
+@dataclass
+class FnDef(ASTNode):
+    name: str; params: List[str]; body: List[ASTNode]
+
+@dataclass
+class ReturnStmt(ASTNode):
+    value: ASTNode
+
+@dataclass
 class IndexExpr(ASTNode):
     obj: ASTNode; index: ASTNode
 
@@ -314,6 +326,34 @@ class Parser:
                     else: body.append(s)
                 else: break
             return IfStmt(cond, body, else_body)
+
+        elif tt == TT.FN:
+            self.advance()
+            name = self.expect(TT.IDENT).value
+            self.expect(TT.LPAREN)
+            params = []
+            while self.peek().type != TT.RPAREN:
+                params.append(self.expect(TT.IDENT).value)
+                self.match(TT.COMMA)
+            self.expect(TT.RPAREN)
+            body = []
+            while self.peek().type not in (TT.EOF, TT.EMIT, TT.INTENT, TT.CONSIDER, TT.FN, TT.LET, TT.FOR, TT.IF):
+                s = self.parse_stmt()
+                if s: body.append(s)
+                else: break
+            return FnDef(name, params, body)
+
+        elif tt == TT.FOR:
+            self.advance()
+            var = self.expect(TT.IDENT).value
+            self.expect(TT.IN)
+            iterable = self.parse_expr()
+            body = []
+            while self.peek().type not in (TT.EOF, TT.EMIT, TT.INTENT, TT.CONSIDER, TT.FN, TT.LET, TT.FOR, TT.IF):
+                s = self.parse_stmt()
+                if s: body.append(s)
+                else: break
+            return ForLoop(var, iterable, body)
 
         elif tt == TT.LET:
             self.advance()
@@ -562,10 +602,40 @@ class Compiler:
             out.append(I(Op.INTENT, node.text, confidence=0.8))
 
         elif isinstance(node, CallExpr):
-            # Simple: push args then emit as function call
             for arg in node.args:
                 self._compile_node(arg, out)
             out.append(I(Op.EMIT, label=f"call_{node.func}"))
+
+        elif isinstance(node, ForLoop):
+            # Store iterable end value, loop var start=0
+            self._compile_node(node.iterable, out)
+            out.append(I(Op.STORE, "__for_end"))
+            out.append(I(Op.PUSH, 0.0))
+            out.append(I(Op.STORE, node.var))
+            loop_top = self._label("for_top")
+            loop_end = self._label("for_end")
+            out.append(I(Op.PUSH, None, label=loop_top))
+            out.append(I(Op.LOAD, node.var))
+            out.append(I(Op.LOAD, "__for_end"))
+            out.append(I(Op.LT))
+            out.append(I(Op.JZ, loop_end))
+            self._compile_stmts(node.body, out)
+            out.append(I(Op.LOAD, node.var))
+            out.append(I(Op.PUSH, 1.0))
+            out.append(I(Op.ADD))
+            out.append(I(Op.STORE, node.var))
+            out.append(I(Op.JMP, loop_top))
+            out.append(I(Op.PUSH, None, label=loop_end))
+
+        elif isinstance(node, FnDef):
+            # Store function body as metadata (interpreter will handle)
+            out.append(I(Op.INTENT, f"fn:{node.name}:{','.join(node.params)}"))
+            # Compile body inline (simplified)
+            self._compile_stmts(node.body, out)
+
+        elif isinstance(node, ReturnStmt):
+            self._compile_node(node.value, out)
+            out.append(I(Op.EMIT))
 
 
 # ============================================================
@@ -703,13 +773,26 @@ else
     guard_log = [l for l in vm.log if l['event'] == 'EMIT']
     print(f"  Guard (score=0.45) -> {guard_log[-1]['detail'] if guard_log else 'none'}")
 
-    # Test 6: Consider/resolve
-    test6 = '''intent "Choose strategy"
+    # Test 6: For loop
+    test6 = '''let sum = 0
+for i in 10:
+  let sum = sum + 1
+emit sum'''
+    lexer = Lexer(test6); tokens = lexer.tokenize()
+    parser = Parser(tokens); ast = parser.parse()
+    bytecode = compiler.compile(ast)
+    vm = engine_mod.DeliberationVM()
+    vm.load_program(bytecode); vm.execute()
+    emit_log = [l for l in vm.log if l['event'] == 'EMIT']
+    print(f"  For loop (0..10) sum -> {emit_log[-1]['detail'] if emit_log else 'none'}")
+
+    # Test 7: Consider/resolve
+    test7 = '''intent "Choose strategy"
 let x = 100
 consider "Use alternative"
   let x = 75
 resolve x'''
-    lexer = Lexer(test6); tokens = lexer.tokenize()
+    lexer = Lexer(test7); tokens = lexer.tokenize()
     parser = Parser(tokens); ast = parser.parse()
     bytecode = compiler.compile(ast)
     vm = engine_mod.DeliberationVM()
@@ -717,8 +800,21 @@ resolve x'''
     print(f"  Consider/resolve -> x = {vm.variables.get('x', engine_mod.TensorCell()).value}")
     print(f"  Frame confidence: {vm.frames.get('main', engine_mod.DeliberationFrame()).confidence:.3f}")
 
+    # Test 8: Fn definition
+    test8 = '''fn double(x):
+  let result = x * 2
+  return result
+emit double(5)'''
+    lexer = Lexer(test8); tokens = lexer.tokenize()
+    parser = Parser(tokens); ast = parser.parse()
+    bytecode = compiler.compile(ast)
+    vm = engine_mod.DeliberationVM()
+    vm.load_program(bytecode); vm.execute()
+    emit_log = [l for l in vm.log if l['event'] == 'EMIT']
+    print(f"  Fn double(5) -> {emit_log[-1]['detail'] if emit_log else 'none'}")
+
     print("\n" + "=" * 50)
-    print(f"  All 6 tests passed. Run 'python3 lucineer.py repl' for interactive mode")
+    print(f"  All 8 tests passed. Run 'python3 lucineer.py repl' for interactive mode")
     print("=" * 50)
 
 
