@@ -1,53 +1,96 @@
-# Agentic Compiler
+# agentic-compiler
 
-A new paradigm where compilation is deliberation, not transformation. The compiler doesn't just transform code — it experiments, learns, and evolves the codebase in real-time.
+The Lucineer Agentic Compiler — deliberation bytecode for programmable thought.
 
-## Core Insight
+## Core Innovation
+
+Traditional compilers transform syntax. The Agentic Compiler transforms **intent**. It captures not just *what* code does but *why* decisions were made, enabling:
+
+- **Deliberation capture**: Every decision is recorded with confidence scores and alternatives
+- **Error as signal**: Errors don't crash — they generate semantic gradients for learning
+- **Confidence propagation**: Uncertainty flows through computation like a tensor field
+- **Multi-agent compilation**: Specialized agents collaborate on optimization
+
+## Architecture
 
 ```
-Traditional: source -> compiler -> binary
-Agentic:     markdown -> swarm deliberation -> multiple possible runtimes
+NL Intent → Deliberation IR → Semantic Analysis → Target Code
+                ↓                    ↓
+           Confidence          Optimization
+           Tensors             Alternatives
 ```
 
-## 10-Round Reverse-Actualization (159K chars)
+## Module: Deliberation Bytecode Engine (`src/compiler/engine.py`)
 
-| Round | Title | Model |
-|-------|-------|-------|
-| 1 | 10-Year Vision (2036) | deepseek-chat |
-| 2 | Core Architecture | deepseek-reasoner |
-| 3 | Error as Signal | deepseek-chat |
-| 4 | Spreadsheet/Tensor Logic | deepseek-reasoner |
-| 5 | Git as Instruction Manual | deepseek-chat |
-| 6 | A/B Experimentation Engine | deepseek-reasoner |
-| 7 | Swarm Deliberation Protocol | deepseek-chat |
-| 8 | Markdown DSL Extensions | deepseek-reasoner |
-| 9 | 5-Year Bridge Synthesis | deepseek-reasoner |
-| 10 | Dynamic Roadmap | deepseek-reasoner |
+### Opcode Set (42 opcodes)
 
-## Key Concepts
+**Stack**: PUSH, POP, DUP, SWAP
+**Arithmetic**: ADD, SUB, MUL, DIV, MOD, NEG
+**Comparison**: EQ, NE, LT, GT, LTE, GTE
+**Logic**: AND, OR, NOT, XOR
+**Control**: JMP, JZ, JNZ, CALL, RET, LOOP
+**Deliberation**: INTENT, CONSIDER, RESOLVE, CONFIDENCE, ALTERNATIVE, QUERY, LEARN, EXPLAIN, GUARD, ADAPT
+**Data**: LOAD, STORE, LOAD_ATTR, STORE_ATTR, INDEX, SLICE
+**Collection**: MAP, FILTER, REDUCE, COLLECT
+**I/O**: EMIT, LOG
 
-- **Deliberation Bytecode**: Universal intermediate representation capturing both "what" and "why"
-- **Error as Signal**: Errors generate training data, not frustration. Stable runtime never breaks.
-- **A/B Compilation**: Experimental versions run alongside stable, generating learning signals
-- **Git as Instruction Manual**: Compiler reads git history to understand the project
-- **Swarm Deliberation**: Multiple agents (advocate, critic, synthesizer) debate optimal compilation
-- **The Keystone**: Deliberation bytecode as the Rosetta Stone for programmable thought
+### Key Concepts
 
-## Phase 1 MVP (0-6 months)
+**TensorCell**: The atomic unit — every value carries:
+- `value`: the actual data
+- `confidence`: 0.0-1.0 certainty score
+- `decision_depth`: how many deliberation layers deep
+- `alternatives`: paths not taken
+- `intent`: which deliberation produced this
+- `source`: which branch
 
-- Parse extended markdown with Lucineer annotations
-- Generate deliberation bytecode as JSON-serializable graphs
-- Basic semantic tensor cells with confidence scoring
-- Self-hosting: compiler can compile its own source
+**DeliberationFrame**: A reasoning context:
+- Tracks intent, confidence, alternatives considered
+- Supports nested deliberation (frame trees)
+- Confidence degrades through deliberation depth
 
-## Architecture (from Round 2)
+**Error-as-Signal**: When execution fails:
+1. Compute semantic gradient (what was the error about?)
+2. Generate alternatives (how could this be fixed?)
+3. Record as training signal (don't crash, learn)
 
-Markdown (human + annotations) -> Deliberation Bytecode (semantic execution graph) -> Target Code (Python/JS/SQL) + Optimization artifacts
+### NLP Transpilation
 
-The swarm topology: Parser Agent -> Semantic Agent -> Optimization Agent -> Specialist Agents -> Unification Agent
+Converts natural language to deliberation bytecode:
+```
+"Calculate engagement rate. Filter active users. Alternatively use lifetime value."
+→ INTENT, LOAD, FILTER, ALTERNATIVE, HALT
+```
 
-## Current State
+### Python Code Generation
 
-Built on the Lucineer ecosystem: deckboss (orchestration), cocapn (runtime), vessel-bridge (HAL), fleet-knowledge (semantic search), 200+ fleet vessels.
+Emits annotated Python from deliberation IR, preserving intent and confidence metadata as comments.
 
-Part of the [Lucineer ecosystem](https://github.com/Lucineer/the-fleet).
+## Run the Demo
+
+```bash
+python3 src/compiler/engine.py
+```
+
+## Research Foundation
+
+10-round Reverse Actualization (159K chars):
+- Round 1: 10-Year Vision (2036) — deliberation canvas, semantic time travel
+- Round 2: Bytecode Specification — 42 opcodes, tensor cells, frames
+- Round 3: Error as Signal — semantic gradients, deliberation scaffolding
+- Round 5: Git as Instruction Manual — temporal semantic hypergraph
+- Round 10: Dynamic Roadmap — 5 phases from MVP to programmable thought
+
+Keystone insight: **Deliberation Bytecode is the Rosetta Stone for programmable thought**
+
+## Next: Build the Agentic-Native Language
+
+Building on the deliberation IR, we're designing **Lucineer Lang** — an agentic-native programming language where:
+- NL and code are first-class equals (seamless transpilation)
+- Confidence tensors are primitive types (like int/float)
+- Deliberation ops are control flow (CONSIDER/RESOLVE like if/else)
+- Models learn to transmute NLP↔code through the same IR
+
+## License
+
+MIT — DiGennaro et al. (SuperInstance & Lucineer)
